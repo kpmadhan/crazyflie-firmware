@@ -59,6 +59,7 @@
 
 // Compensate thrust depending on battery voltage so it will produce about the same
 // amount of thrust independent of the battery voltage. Based on thrust measurement.
+// Not applied for brushless motor setup.
 #define ENABLE_THRUST_BAT_COMPENSATED
 
 //#define ENABLE_ONESHOT125
@@ -177,10 +178,13 @@ typedef struct
   motorsDrvType drvType;
   uint32_t      gpioPerif;
   GPIO_TypeDef* gpioPort;
-  uint32_t      gpioPin;
-  uint32_t      gpioPinSource;
+  uint16_t      gpioPin;
+  uint16_t      gpioPinSource;
   uint32_t      gpioOType;
-  uint32_t      gpioAF;
+  uint8_t       gpioAF;
+  uint32_t      gpioPowerswitchPerif;
+  GPIO_TypeDef* gpioPowerswitchPort;
+  uint16_t      gpioPowerswitchPin;
   uint32_t      timPerif;
   TIM_TypeDef*  tim;
   uint16_t      timPolarity;
@@ -197,11 +201,16 @@ typedef struct
 /**
  * Motor mapping configurations
  */
+extern const MotorPerifDef* motorMapNoMotors[NBR_OF_MOTORS];
 extern const MotorPerifDef* motorMapDefaultBrushed[NBR_OF_MOTORS];
 extern const MotorPerifDef* motorMapDefaltConBrushless[NBR_OF_MOTORS];
 extern const MotorPerifDef* motorMapBigQuadDeck[NBR_OF_MOTORS];
-extern const MotorPerifDef* motorMapRZRBrushless[NBR_OF_MOTORS];
+extern const MotorPerifDef* motorMapBoltBrushless[NBR_OF_MOTORS];
 
+/**
+ * Test sound tones
+ */
+extern const uint16_t testsound[NBR_OF_MOTORS];
 /*** Public interface ***/
 
 /**
@@ -234,6 +243,17 @@ int motorsGetRatio(uint32_t id);
  * FreeRTOS Task to test the Motors driver
  */
 void motorsTestTask(void* params);
+
+/* Set PWM frequency for motor controller
+ * This function will set all motors into a "beep"-mode,
+ * each of the motor will turned on with a given ratio and frequency.
+ * The higher the ratio the higher the given power to the motors.
+ * ATTENTION: To much ratio can push your crazyflie into the air and hurt you!
+ * Example:
+ *     motorsBeep(true, 1000, (uint16_t)(72000000L / frequency)/ 20);
+ *     motorsBeep(false, 0, 0); *
+ * */
+void motorsBeep(int id, bool enable, uint16_t frequency, uint16_t ratio);
 
 #endif /* __MOTORS_H__ */
 
